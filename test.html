@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Bookstore Test</title>
+</head>
+<body style="background:white;color:black;padding:50px;font-family:Arial;">
+    <h1>BOOKSTORE TEST PAGE</h1>
+    <p>If you can see this, the server is working!</p>
+    <div id="books"></div>
+    <script>
+        fetch('http://localhost:3001/books')
+        .then(r => r.json())
+        .then(books => {
+            document.getElementById('books').innerHTML = books.map(b => 
+                `<div style="border:1px solid black;margin:10px;padding:10px;">
+                    <h3>${b.title}</h3>
+                    <p>by ${b.author}</p>
+                    <p>$${b.price}</p>
+                </div>`
+            ).join('');
+        })
+        .catch(e => {
+            document.getElementById('books').innerHTML = 'Error: ' + e;
+        });
+    </script>
+</body>
+</html>

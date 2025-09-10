@@ -7,28 +7,56 @@ services:
       MYSQL_ROOT_PASSWORD: password
       MYSQL_DATABASE: bookstore
     ports:
-      - "3306:3306"
+      - "3307:3306"
     volumes:
+      - mysql_data:/var/lib/mysql
       - ./database/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
 
   catalog-service:
     build: ./catalog-service
     ports:
       - "3001:3001"
+    environment:
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_NAME=bookstore
+      - DB_USER=root
+      - DB_PASSWORD=password
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
+    restart: unless-stopped
 
   order-service:
     build: ./order-service
     ports:
       - "3002:3002"
+    environment:
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_NAME=bookstore
+      - DB_USER=root
+      - DB_PASSWORD=password
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
+    restart: unless-stopped
 
   frontend:
     build: ./frontend
     ports:
       - "3000:80"
+    environment:
+      - REACT_APP_CATALOG_URL=http://localhost:3001
+      - REACT_APP_ORDER_URL=http://localhost:3002
     depends_on:
       - catalog-service
       - order-service
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
